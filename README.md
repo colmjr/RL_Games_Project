@@ -1,1 +1,2 @@
 # RL_Games_Project
+This is a reinforcement learning project that our group did for our English project, our goal is to explore different policy optimizers and their performance in different environments. Colmjr came up with the idea to explore policy optimizers and created most of the custom environments. E-rail made the policy optimizers, and integrated them into the environment. Our future plan is to add a UI through gradio of something else.
