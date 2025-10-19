@@ -3,7 +3,6 @@ import numpy as np
 from stable_baselines3 import PPO
 from BOBO.BOBOppo_training import make_env
 
-
 def int_action_from_pred(action):
     """Convert the model's action prediction to an integer action."""
     if isinstance(action, np.ndarray):
