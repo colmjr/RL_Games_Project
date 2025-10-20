@@ -1,20 +1,20 @@
 """
-This script trains a PPO agent to play as a player in the BOBO environment against a random opponent.
-The results are saved to "BOBOppo_results.zip".
+This script trains a PPO agent to play as a player in the connect 4 environment against a random opponent.
+The results are saved to "connect4ppo_results.zip".
 """
 import random
 import numpy as np
 import gymnasium as gym
 from collections import deque
-from BOBO.BOBOenv import CustomEnvironment
+from Connect_4.connect4env import CustomEnvironment
 
 
 class RandomOpponent:
-    """Returns a random legal action (0-8)."""
+    """Returns a random legal action (0-6)."""
 
     def __call__(self, obs=None):
         """Ignores observation and returns random action."""
-        return random.randint(0, 8)
+        return random.randint(0, 6)
 
 
 class SingleAgentEnv(gym.Env):
@@ -23,7 +23,7 @@ class SingleAgentEnv(gym.Env):
     Agent is player1; opponent provided by opponent_policy.
     """
 
-    def __init__(self, maxsteps, history_len, opponent_policy):
+    def __init__(self, maxsteps, opponent_policy):
         """
         Transforms the two-player CustomEnvironment into a single-agent environment.
         Observation includes own points, opponent points, and opponent's last history_len moves.
@@ -31,18 +31,43 @@ class SingleAgentEnv(gym.Env):
         super().__init__()
         self.env = CustomEnvironment(maxsteps)
         self.opponent = opponent_policy
-        self.history_len = history_len
-        obs_dim = 2 + history_len
-        # low=0.0, high=1.0 for normalization, shape=(obs_dim,) for saving observation dimensions
-        self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
+        self.history_len = maxsteps
+        obs_dim = 2 + maxsteps
+        # low=0.0, high=1.0 for normalization, shape=(obs_dim, ) for saving observation dimensions
+        self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(obs_dim, ), dtype=np.float32)
         self.action_space = gym.spaces.Discrete(9) # Actions 0-8
         # Initialize history with default move (1)
-        self.history = deque([1] * history_len, maxlen=history_len)
+        self.history = deque([1] * maxsteps, maxlen=maxsteps)
         self._last_obs = None
+
+        # Detect agent IDs from the underlying environment to construct actions with correct keys.
+        # Fallback to ['player1', 'player2'] if detection fails.
+        try:
+            if hasattr(self.env, "agents"):
+                self.agent_ids = list(self.env.agents)
+            elif hasattr(self.env, "players"):
+                self.agent_ids = list(self.env.players)
+            else:
+                # common fallback names
+                self.agent_ids = ["player1", "player2"]
+        except Exception:
+            self.agent_ids = ["player1", "player2"]
+
+        # Infer which agent id corresponds to our controlled agent (player1).
+        # Prefer ids containing '1' or 'one' or 'x' (common patterns); otherwise assume index 0.
+        self._my_agent_index = 0
+        for i, aid in enumerate(self.agent_ids):
+            if any(token in aid.lower() for token in ("1", "_1", "one", "x")):
+                self._my_agent_index = i
+                break
+        # Ensure there are at least two agent ids; otherwise fall back to defaults
+        if len(self.agent_ids) < 2:
+            self.agent_ids = ["player1", "player2"]
+            self._my_agent_index = 0
 
     def _encode_move(self, m):
         """Encodes move integer to float in [0,1]."""
-        return float(m) / 8.0
+        return float(m) / 6.0
 
     def _get_obs(self):
         """Constructs the observation array."""
@@ -71,11 +96,19 @@ class SingleAgentEnv(gym.Env):
     def step(self, action):
         """Takes a step in the environment using the agent's action and opponent's action."""
         opp_action = int(self.opponent(self._last_obs)) # Get opponent's action
-        actions = {"player1": int(action), "player2": opp_action} # Combine actions
+        # Build actions dict using detected agent ids so keys match underlying env expectations.
+        # Determine the other agent index.
+        other_idx = 1 - self._my_agent_index
+        actions = {
+            self.agent_ids[self._my_agent_index]: int(action),
+            self.agent_ids[other_idx]: opp_action,
+        }
+
         observations, rewards, terminations, truncations, infos = self.env.step(actions) # Get steps in env
         r = rewards.get("player1", 0) # Reward for player1
         terminated = bool(terminations.get("player1", False)) # Termination status for player1
         truncated = bool(truncations.get("player1", False)) # Truncation status for player1
+        self.history.append(action)  # Update history with agent's action
         self.history.append(opp_action) # Update history with opponent's action
         obs = self._get_obs() # Update observation after step
         self._last_obs = obs # Store last observation
@@ -84,12 +117,12 @@ class SingleAgentEnv(gym.Env):
 
 
 def make_env():
-    """Creates the single-agent BOBO environment with a random opponent."""
-    return SingleAgentEnv(50, 20, RandomOpponent())
+    """Creates the single-agent connect 4 environment with a random opponent."""
+    return SingleAgentEnv(42, RandomOpponent())
 
 
 if __name__ == "__main__":
-    """Train a PPO agent in the BOBO environment and save the model."""
+    """Train a PPO agent in the connect 4 environment and save the model."""
 
     from stable_baselines3 import PPO
     from stable_baselines3.common.vec_env import DummyVecEnv
@@ -106,5 +139,5 @@ if __name__ == "__main__":
         gamma=0.99,
     )
     model.learn(100000)
-    model.save("BOBOppo_results")
-    print("Training complete. Model saved as 'BOBOppo_results.zip'.")
+    model.save("connect4ppo_results")
+    print("Training complete. Model saved as 'connect4ppo_results.zip'.")
