@@ -6,12 +6,12 @@ from BOBO.BOBOppo_training import make_env
 
 def int_action_from_pred(action):
     """Convert the model's action prediction to an integer action."""
-    if isinstance(action, np.ndarray):
+    if isinstance(action, np.ndarray): # Check if action is in a numpy array
         try:
-            return int(action.item())
-        except Exception:
+            return int(action.item()) # Try to convert using item()
+        except Exception: # Fallback to flattening
             return int(action.flatten()[0])
-    elif isinstance(action, (list, tuple)):
+    elif isinstance(action, (list, tuple)): # Check if action is a list or tuple
         return int(action[0])
     else:
         return int(action)
