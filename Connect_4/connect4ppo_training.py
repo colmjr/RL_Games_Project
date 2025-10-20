@@ -34,36 +34,11 @@ class SingleAgentEnv(gym.Env):
         self.history_len = maxsteps
         obs_dim = 2 + maxsteps
         # low=0.0, high=1.0 for normalization, shape=(obs_dim, ) for saving observation dimensions
-        self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(obs_dim, ), dtype=np.float32)
+        self.observation_space = gym.  spaces.Box(low=0.0, high=1.0, shape=(obs_dim, ), dtype=np.float32)
         self.action_space = gym.spaces.Discrete(9) # Actions 0-8
         # Initialize history with default move (1)
         self.history = deque([1] * maxsteps, maxlen=maxsteps)
         self._last_obs = None
-
-        # Detect agent IDs from the underlying environment to construct actions with correct keys.
-        # Fallback to ['player1', 'player2'] if detection fails.
-        try:
-            if hasattr(self.env, "agents"):
-                self.agent_ids = list(self.env.agents)
-            elif hasattr(self.env, "players"):
-                self.agent_ids = list(self.env.players)
-            else:
-                # common fallback names
-                self.agent_ids = ["player1", "player2"]
-        except Exception:
-            self.agent_ids = ["player1", "player2"]
-
-        # Infer which agent id corresponds to our controlled agent (player1).
-        # Prefer ids containing '1' or 'one' or 'x' (common patterns); otherwise assume index 0.
-        self._my_agent_index = 0
-        for i, aid in enumerate(self.agent_ids):
-            if any(token in aid.lower() for token in ("1", "_1", "one", "x")):
-                self._my_agent_index = i
-                break
-        # Ensure there are at least two agent ids; otherwise fall back to defaults
-        if len(self.agent_ids) < 2:
-            self.agent_ids = ["player1", "player2"]
-            self._my_agent_index = 0
 
     def _encode_move(self, m):
         """Encodes move integer to float in [0,1]."""
@@ -71,10 +46,10 @@ class SingleAgentEnv(gym.Env):
 
     def _get_obs(self):
         """Constructs the observation array."""
-        p1 = getattr(self.env, "point1", 0) # Get player1 points
-        p2 = getattr(self.env, "point2", 0) # Get player2 points
-        own = float(np.clip(p1, 0, 20)) / 20.0 # Normalize own points
-        opp = float(np.clip(p2, 0, 20)) / 20.0 # Normalize opponent points
+        po = getattr(self.env, "point_o", 0) # Get player_o points
+        px = getattr(self.env, "point_x", 0) # Get player_x points
+        own = float(np.clip(po, 0, 20)) / 20.0 # Normalize own points
+        opp = float(np.clip(px, 0, 20)) / 20.0 # Normalize opponent points
         hist = [self._encode_move(m) for m in list(self.history)] # Encode history
         return np.array([own, opp] + hist, dtype=np.float32)
 
@@ -96,23 +71,16 @@ class SingleAgentEnv(gym.Env):
     def step(self, action):
         """Takes a step in the environment using the agent's action and opponent's action."""
         opp_action = int(self.opponent(self._last_obs)) # Get opponent's action
-        # Build actions dict using detected agent ids so keys match underlying env expectations.
-        # Determine the other agent index.
-        other_idx = 1 - self._my_agent_index
-        actions = {
-            self.agent_ids[self._my_agent_index]: int(action),
-            self.agent_ids[other_idx]: opp_action,
-        }
-
+        actions = {"player_o": int(action), "player_x": opp_action}  # Combine actions
         observations, rewards, terminations, truncations, infos = self.env.step(actions) # Get steps in env
-        r = rewards.get("player1", 0) # Reward for player1
-        terminated = bool(terminations.get("player1", False)) # Termination status for player1
-        truncated = bool(truncations.get("player1", False)) # Truncation status for player1
+        r = rewards.get("player_o", 0) # Reward for player_o
+        terminated = bool(terminations.get("player_o", False)) # Termination status for player_o
+        truncated = bool(truncations.get("player_o", False)) # Truncation status for player_o
         self.history.append(action)  # Update history with agent's action
         self.history.append(opp_action) # Update history with opponent's action
         obs = self._get_obs() # Update observation after step
         self._last_obs = obs # Store last observation
-        info = infos.get("player1", {}) if isinstance(infos, dict) else {} # Info for player1
+        info = infos.get("player_o", {}) if isinstance(infos, dict) else {} # Info for player_o
         return obs, float(r), terminated, truncated, info
 
 
@@ -138,6 +106,6 @@ if __name__ == "__main__":
         ent_coef=0.01,
         gamma=0.99,
     )
-    model.learn(100000)
+    model.learn(1000000)
     model.save("connect4ppo_results")
     print("Training complete. Model saved as 'connect4ppo_results.zip'.")
