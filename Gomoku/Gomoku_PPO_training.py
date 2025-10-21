@@ -1,20 +1,19 @@
 """
-This script trains a PPO agent to play as a player in the connect 4 environment against a random opponent.
-The results are saved to "connect4_PPO_results.zip".
+This script trains a PPO agent to play as a player in the Gomoku environment against a random opponent.
+The results are saved to "Gomoku_PPO_results.zip".
 """
 import random
 import numpy as np
 import gymnasium as gym
 from collections import deque
-from Connect_4.connect4_env import CustomEnvironment
-
+from Gomoku.gomokuenv import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
 
 class RandomOpponent:
     """Returns a random legal action (0-6)."""
 
     def __call__(self, obs=None):
         """Ignores observation and returns random action."""
-        return random.randint(0, 6)
+        return CustomEnvironment.action_space(self, "player_x").sample()
 
 
 class SingleAgentEnv(gym.Env):
@@ -40,9 +39,9 @@ class SingleAgentEnv(gym.Env):
         self.history = deque([1] * maxsteps, maxlen=maxsteps)
         self._last_obs = None
 
-    def _encode_move(self, m):
+    def _encode_move(self, x, y):
         """Encodes move integer to float in [0,1]."""
-        return float(m) / 6.0
+        return float(x * GRID_WIDTH + y) / (GRID_HEIGHT * GRID_WIDTH)
 
     def _get_obs(self):
         """Constructs the observation array."""
@@ -85,12 +84,12 @@ class SingleAgentEnv(gym.Env):
 
 
 def make_env():
-    """Creates the single-agent connect 4 environment with a random opponent."""
-    return SingleAgentEnv(42, RandomOpponent())
+    """Creates the single-agent Gomoku environment with a random opponent."""
+    return SingleAgentEnv(GRID_HEIGHT * GRID_WIDTH, RandomOpponent())
 
 
 if __name__ == "__main__":
-    """Train a PPO agent in the connect 4 environment and save the model."""
+    """Train a PPO agent in the Gomoku environment and save the model."""
 
     from stable_baselines3 import PPO
     from stable_baselines3.common.vec_env import DummyVecEnv
@@ -107,5 +106,5 @@ if __name__ == "__main__":
         gamma=0.99,
     )
     model.learn(1_000_000)
-    model.save("connect4_PPO_results")
-    print("Training complete. Model saved as 'connect4_PPO_results.zip'.")
+    model.save("Gomoku_PPO_results")
+    print("Training complete. Model saved as 'Gomoku_PPO_results.zip'.")

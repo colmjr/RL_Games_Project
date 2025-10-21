@@ -9,7 +9,7 @@ from Gomoku.Gomoku_pettingzoo_sb3_wrapper import (
     make_sb3_env,
 )
 
-MAX_STEPS = 42
+MAX_STEPS = GRID_HEIGHT * GRID_WIDTH  # Maximum steps in a Gomoku game
 
 def _opponent_policy():
     probe_env = CustomEnvironment(MAX_STEPS)
@@ -39,9 +39,16 @@ def make_env():
     )
 
 if __name__ == "__main__":
-    env_fn = make_env()
-    vec_env = DummyVecEnv([env_fn])
-    model = PPO("MlpPolicy", vec_env, n_steps=2048, batch_size=64, learning_rate=3e-4,
-                ent_coef=0.01, gamma=0.99, verbose=1)
+    vec_env = DummyVecEnv([make_env])
+    model = PPO(
+        "MlpPolicy",
+        vec_env,
+        verbose=1,
+        n_steps=2048,
+        batch_size=64,
+        learning_rate=3e-4,
+        ent_coef=0.01,
+        gamma=0.99,
+    )
     model.learn(1_000_000)
-    model.save("gomokuppo_results")
+    model.save("Gomoku_PPO_results")
