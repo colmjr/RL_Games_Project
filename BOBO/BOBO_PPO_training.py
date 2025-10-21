@@ -2,10 +2,8 @@
 This script trains a PPO agent to play as a player in the BOBO environment against a random opponent.
 The results are saved to "BOBO_PPO_results.zip".
 """
-import random
 import numpy as np
 import gymnasium as gym
-from collections import deque
 from BOBO.BOBO_env import CustomEnvironment
 
 
@@ -14,7 +12,8 @@ class RandomOpponent:
 
     def __call__(self, obs=None):
         """Ignores observation and returns random action."""
-        return random.randint(0, 8)
+        # numpy.randint high is exclusive; use 9 to include action 8
+        return int(np.random.randint(0, 9))
 
 
 class SingleAgentEnv(gym.Env):
@@ -36,8 +35,7 @@ class SingleAgentEnv(gym.Env):
         # low=0.0, high=1.0 for normalization, shape=(obs_dim,) for saving observation dimensions
         self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
         self.action_space = gym.spaces.Discrete(9) # Actions 0-8
-        # Initialize history with default move (1)
-        self.history = deque([1] * history_len, maxlen=history_len)
+        self.history = [1] * history_len
         self._last_obs = None
 
     def _encode_move(self, m):
@@ -50,37 +48,34 @@ class SingleAgentEnv(gym.Env):
         p2 = getattr(self.env, "point2", 0) # Get player2 points
         own = float(np.clip(p1, 0, 20)) / 20.0 # Normalize own points
         opp = float(np.clip(p2, 0, 20)) / 20.0 # Normalize opponent points
-        hist = [self._encode_move(m) for m in list(self.history)] # Encode history
+        hist = [self._encode_move(m) for m in self.history] # Encode history
         return np.array([own, opp] + hist, dtype=np.float32)
 
     def reset(self, *, seed=None, options=None):
         """Resets the environment and initializes history."""
         try:
-            _ = self.env.reset(seed=seed, options=options) # Reset with seed and options
-        except TypeError: # For older gym versions
-            try:
-                _ = self.env.reset(seed) # Reset with seed only
-            except Exception: # Fallback for very old versions
-                pass
+            _ = self.env.reset(seed=seed, options=options)
+        except TypeError:
+            _ = self.env.reset(seed)
         # Initialize history with default move (1)
-        self.history = deque([1] * self.history_len, maxlen=self.history_len)
-        obs = self._get_obs() # Get initial observation
+        self.history = [1] * self.history_len
+        obs = self._get_obs() # Get observation
         self._last_obs = obs # Store last observation
         return obs, {}
 
     def step(self, action):
         """Takes a step in the environment using the agent's action and opponent's action."""
-        opp_action = int(self.opponent(self._last_obs)) # Get opponent's action
+        opp_action = int(self.opponent(self._last_obs)) # Get opponent action
         actions = {"player1": int(action), "player2": opp_action} # Combine actions
         observations, rewards, terminations, truncations, infos = self.env.step(actions) # Get steps in env
-        r = rewards.get("player1", 0) # Reward for player1
+        r = float(rewards.get("player1", 0)) # Reward for player1
         terminated = bool(terminations.get("player1", False)) # Termination status for player1
         truncated = bool(truncations.get("player1", False)) # Truncation status for player1
         self.history.append(opp_action) # Update history with opponent's action
         obs = self._get_obs() # Update observation after step
         self._last_obs = obs # Store last observation
         info = infos.get("player1", {}) if isinstance(infos, dict) else {} # Info for player1
-        return obs, float(r), terminated, truncated, info
+        return obs, r, terminated, truncated, info
 
 
 def make_env():
@@ -106,5 +101,5 @@ if __name__ == "__main__":
         gamma=0.99,
     )
     model.learn(100_000)
-    model.save("BOBO_POO_results")
+    model.save("BOBO_PPO_results")
     print("Training complete. Model saved as 'BOBO_PPO_results.zip'.")

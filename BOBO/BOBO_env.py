@@ -108,7 +108,7 @@ class CustomEnvironment(ParallelEnv):
         self.timestep += 1
         if self.timestep > self.maxsteps:
             truncations = {"player1": True, "player2": True}
-        observations = {a: (self.move1, self.point1, self.point2) for a in self.agents}
+        observations = {a: (self.move1, self.move2, self.point1, self.point2) for a in self.agents}
         infos = {a: {"p1_move": self.move1, "p2_move": self.move2,
                      "p1_points": self.point1, "p2_points": self.point2,
                      "winner": winner if any(terminations.values()) else None

@@ -206,3 +206,7 @@ class CustomEnvironment(ParallelEnv):
 
     def _other_agent(self, agent: str) -> str:
         return "player_x" if agent == "player_o" else "player_o"
+
+    def _board_to_obs(self):
+        flat = [cell for row in self.grid for cell in row]
+        return np.array(flat, dtype=np.int64)

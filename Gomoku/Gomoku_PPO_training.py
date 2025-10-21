@@ -2,85 +2,82 @@
 This script trains a PPO agent to play as a player in the Gomoku environment against a random opponent.
 The results are saved to "Gomoku_PPO_results.zip".
 """
-import random
 import numpy as np
 import gymnasium as gym
-from collections import deque
-from Gomoku.gomokuenv import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
+from Gomoku.Gomoku_env import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
+
 
 class RandomOpponent:
-    """Returns a random legal action (0-6)."""
+    """Returns a random legal action."""
 
-    def __call__(self, obs=None):
-        """Ignores observation and returns random action."""
-        return CustomEnvironment.action_space(self, "player_x").sample()
+    def __call__(self, obs=None, env: CustomEnvironment = None):
+        """Ignores observation and returns random legal action using env to avoid full columns."""
+        try:
+            # If env is available, return a tuple (x,y) for a random empty cell in env.grid.
+            grid = env.grid  # type: ignore[attr-defined]
+            empties = np.argwhere(grid == 0)
+            if len(empties) == 0:
+                return 0, 0
+            idx = np.random.randint(0, len(empties))
+            x, y = int(empties[idx, 0]), int(empties[idx, 1])
+            return x, y
+        except Exception:
+            # Fallback to uniform sampling if env not provided or any error occurs
+            x = int(np.random.randint(0, GRID_HEIGHT))
+            y = int(np.random.randint(0, GRID_WIDTH))
+            return x, y
 
 
 class SingleAgentEnv(gym.Env):
     """
     Single-agent wrapper around Parallel CustomEnvironment.
-    Agent is player1; opponent provided by opponent_policy.
+    Agent is player_o; opponent provided by opponent_policy.
     """
 
-    def __init__(self, maxsteps, opponent_policy):
-        """
-        Transforms the two-player CustomEnvironment into a single-agent environment.
-        Observation includes own points, opponent points, and opponent's last history_len moves.
-        """
+    def __init__(self, maxsteps: int, opponent_policy):
         super().__init__()
         self.env = CustomEnvironment(maxsteps)
         self.opponent = opponent_policy
-        self.history_len = maxsteps
-        obs_dim = 2 + maxsteps
-        # low=0.0, high=1.0 for normalization, shape=(obs_dim, ) for saving observation dimensions
-        self.observation_space = gym.  spaces.Box(low=0.0, high=1.0, shape=(obs_dim, ), dtype=np.float32)
-        self.action_space = gym.spaces.Discrete(9) # Actions 0-8
-        # Initialize history with default move (1)
-        self.history = deque([1] * maxsteps, maxlen=maxsteps)
+        # low=0.0, high=1.0 for normalization, shape=(GRID_HEIGHT * GRID_WIDTH,) for saving observation dimensions
+        self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(GRID_HEIGHT * GRID_WIDTH,), dtype=np.float32)
+        self.action_space = gym.spaces.Discrete(GRID_HEIGHT * GRID_WIDTH)
         self._last_obs = None
 
-    def _encode_move(self, x, y):
-        """Encodes move integer to float in [0,1]."""
-        return float(x * GRID_WIDTH + y) / (GRID_HEIGHT * GRID_WIDTH)
-
-    def _get_obs(self):
-        """Constructs the observation array."""
-        po = getattr(self.env, "point_o", 0) # Get player_o points
-        px = getattr(self.env, "point_x", 0) # Get player_x points
-        own = float(np.clip(po, 0, 20)) / 20.0 # Normalize own points
-        opp = float(np.clip(px, 0, 20)) / 20.0 # Normalize opponent points
-        hist = [self._encode_move(m) for m in list(self.history)] # Encode history
-        return np.array([own, opp] + hist, dtype=np.float32)
+    def _get_obs(self, raw_obs=None):
+        """Return normalized flattened board observation as float32 vector in [0,1]."""
+        if raw_obs is None:
+            raw_obs = self.env._board_to_obs()
+        arr = np.asarray(raw_obs, dtype=np.float32).flatten()
+        return arr / 2.0  # Normalize the value {0,1,2} to [0,1]
 
     def reset(self, *, seed=None, options=None):
-        """Resets the environment and initializes history."""
+        """Reset underlying parallel env and return the observation for player_o."""
         try:
-            _ = self.env.reset(seed=seed, options=options) # Reset with seed and options
-        except TypeError: # For older gym versions
-            try:
-                _ = self.env.reset(seed) # Reset with seed only
-            except Exception: # Fallback for very old versions
-                pass
-        # Initialize history with default move (1)
-        self.history = deque([1] * self.history_len, maxlen=self.history_len)
-        obs = self._get_obs() # Get initial observation
-        self._last_obs = obs # Store last observation
+            observations, infos = self.env.reset(seed=seed, options=options)
+        except TypeError:
+            observations, infos = self.env.reset(seed=seed)
+        obs_raw = observations.get("player_o")
+        obs = self._get_obs(obs_raw)
+        self._last_obs = obs
         return obs, {}
 
-    def step(self, action):
-        """Takes a step in the environment using the agent's action and opponent's action."""
-        opp_action = int(self.opponent(self._last_obs)) # Get opponent's action
-        actions = {"player_o": int(action), "player_x": opp_action}  # Combine actions
-        observations, rewards, terminations, truncations, infos = self.env.step(actions) # Get steps in env
-        r = rewards.get("player_o", 0) # Reward for player_o
-        terminated = bool(terminations.get("player_o", False)) # Termination status for player_o
-        truncated = bool(truncations.get("player_o", False)) # Truncation status for player_o
-        self.history.append(action)  # Update history with agent's action
-        self.history.append(opp_action) # Update history with opponent's action
-        obs = self._get_obs() # Update observation after step
-        self._last_obs = obs # Store last observation
-        info = infos.get("player_o", {}) if isinstance(infos, dict) else {} # Info for player_o
-        return obs, float(r), terminated, truncated, info
+    def step(self, action: int):
+        """Take an integer action (0..H*W-1) for player_o and sample opponent action, call env.step."""
+        # Decode action integer to (x,y) coordinates
+        x = int(action) // GRID_WIDTH
+        y = int(action) % GRID_WIDTH
+        agent_move = (x, y)
+        opp_move = self.opponent(self._last_obs, self.env)
+        actions = {"player_o": np.array(agent_move, dtype=np.int64), "player_x": np.array(opp_move, dtype=np.int64)}
+        observations, rewards, terminations, truncations, infos = self.env.step(actions)
+        r = float(rewards.get("player_o", 0.0))
+        terminated = bool(terminations.get("player_o", False))
+        truncated = bool(truncations.get("player_o", False))
+        obs_raw = observations.get("player_o") # Get player_o observation
+        obs = self._get_obs(obs_raw) # Process observation
+        self._last_obs = obs
+        info = infos.get("player_o", {}) if isinstance(infos, dict) else {}
+        return obs, r, terminated, truncated, info
 
 
 def make_env():
@@ -105,6 +102,6 @@ if __name__ == "__main__":
         ent_coef=0.01,
         gamma=0.99,
     )
-    model.learn(1_000_000)
+    model.learn(100_000)
     model.save("Gomoku_PPO_results")
     print("Training complete. Model saved as 'Gomoku_PPO_results.zip'.")
