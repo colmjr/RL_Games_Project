@@ -1,12 +1,12 @@
 """
 This script trains a PPO agent to play as a player in the BOBO environment against a random opponent.
-The results are saved to "BOBOppo_results.zip".
+The results are saved to "BOBO_PPO_results.zip".
 """
 import random
 import numpy as np
 import gymnasium as gym
 from collections import deque
-from BOBO.BOBOenv import CustomEnvironment
+from BOBO.BOBO_env import CustomEnvironment
 
 
 class RandomOpponent:
@@ -106,5 +106,5 @@ if __name__ == "__main__":
         gamma=0.99,
     )
     model.learn(100000)
-    model.save("BOBOppo_results")
-    print("Training complete. Model saved as 'BOBOppo_results.zip'.")
+    model.save("BOBO_POO_results")
+    print("Training complete. Model saved as 'BOBO_PPO_results.zip'.")

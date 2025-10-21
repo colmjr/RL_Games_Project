@@ -40,4 +40,4 @@ def evaluate(episodes, model_path):
 
 if __name__ == "__main__":
     """Run the evaluation of the trained PPO model."""
-    evaluate(100, "BOBOppo_results")
+    evaluate(100, "BOBO_PPO_results")

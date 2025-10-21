@@ -1,7 +1,7 @@
 """Evaluate a trained PPO model on the connect 4 environment and print the win rate."""
 import numpy as np
 from stable_baselines3 import PPO
-from Connect_4.connect4ppo_training import make_env
+from Connect_4.connect4_PPO_training import make_env
 
 
 def int_action_from_pred(action):
@@ -40,4 +40,4 @@ def evaluate(episodes, model_path):
 
 if __name__ == "__main__":
     """Run the evaluation of the trained PPO model."""
-    evaluate(100, "connect4ppo_results")
+    evaluate(100, "connect4_PPO_results")

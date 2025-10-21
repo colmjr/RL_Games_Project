@@ -1,12 +1,12 @@
 """
 This script trains a PPO agent to play as a player in the connect 4 environment against a random opponent.
-The results are saved to "connect4ppo_results.zip".
+The results are saved to "connect4_PPO_results.zip".
 """
 import random
 import numpy as np
 import gymnasium as gym
 from collections import deque
-from Connect_4.connect4env import CustomEnvironment
+from Connect_4.connect4_env import CustomEnvironment
 
 
 class RandomOpponent:
@@ -107,5 +107,5 @@ if __name__ == "__main__":
         gamma=0.99,
     )
     model.learn(1000000)
-    model.save("connect4ppo_results")
-    print("Training complete. Model saved as 'connect4ppo_results.zip'.")
+    model.save("connect4_PPO_results")
+    print("Training complete. Model saved as 'connect4_PPO_results.zip'.")
