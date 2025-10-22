@@ -4,7 +4,7 @@ The results are saved to "connect4_PPO_results.zip".
 """
 import numpy as np
 import gymnasium as gym
-from Connect_4.connect4_env import CustomEnvironment, ROWS, COLUMNS, column_is_full
+from connect4_env import CustomEnvironment, ROWS, COLUMNS, column_is_full
 
 
 class RandomOpponent:

@@ -4,7 +4,7 @@ The results are saved to "Gomoku_PPO_results.zip".
 """
 import numpy as np
 import gymnasium as gym
-from Gomoku.Gomoku_env import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
+from Gomoku_env import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
 
 
 class RandomOpponent:

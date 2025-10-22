@@ -4,7 +4,7 @@ The results are saved to "BOBO_PPO_results.zip".
 """
 import numpy as np
 import gymnasium as gym
-from BOBO.BOBO_env import CustomEnvironment
+from BOBO_env import CustomEnvironment
 
 
 class RandomOpponent:
