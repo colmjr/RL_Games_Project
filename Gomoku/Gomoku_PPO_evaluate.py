@@ -1,7 +1,7 @@
 """Evaluate a trained PPO model on the Gomoku environment and print the win rate."""
 import numpy as np
 from stable_baselines3 import PPO
-from Gomoku.Gomoku_PPO_training import make_env
+from Gomoku_PPO_training import make_env
 
 
 def int_action_from_pred(action):

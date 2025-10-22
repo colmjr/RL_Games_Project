@@ -1,7 +1,7 @@
 """Evaluate a trained PPO model on the connect 4 environment and print the win rate."""
 import numpy as np
 from stable_baselines3 import PPO
-from Connect_4.connect4_PPO_training import make_env
+from connect4_PPO_training import make_env
 
 
 def int_action_from_pred(action):
