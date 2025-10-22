@@ -4,6 +4,7 @@ The results are saved to "BOBO_PPO_results.zip".
 """
 import numpy as np
 import gymnasium as gym
+from collections import deque
 from BOBO_env import CustomEnvironment
 
 
@@ -35,7 +36,8 @@ class SingleAgentEnv(gym.Env):
         # low=0.0, high=1.0 for normalization, shape=(obs_dim,) for saving observation dimensions
         self.observation_space = gym.spaces.Box(low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32)
         self.action_space = gym.spaces.Discrete(9) # Actions 0-8
-        self.history = [1] * history_len
+        # Initialize history with default move (1)
+        self.history = deque([1] * history_len, maxlen=history_len)
         self._last_obs = None
 
     def _encode_move(self, m):
@@ -48,7 +50,7 @@ class SingleAgentEnv(gym.Env):
         p2 = getattr(self.env, "point2", 0) # Get player2 points
         own = float(np.clip(p1, 0, 20)) / 20.0 # Normalize own points
         opp = float(np.clip(p2, 0, 20)) / 20.0 # Normalize opponent points
-        hist = [self._encode_move(m) for m in self.history] # Encode history
+        hist = [self._encode_move(m) for m in list(self.history)] # Encode history
         return np.array([own, opp] + hist, dtype=np.float32)
 
     def reset(self, *, seed=None, options=None):
@@ -58,8 +60,8 @@ class SingleAgentEnv(gym.Env):
         except TypeError:
             _ = self.env.reset(seed)
         # Initialize history with default move (1)
-        self.history = [1] * self.history_len
-        obs = self._get_obs() # Get observation
+        self.history = deque([1] * self.history_len, maxlen=self.history_len)
+        obs = self._get_obs() # Get initial observation
         self._last_obs = obs # Store last observation
         return obs, {}
 
