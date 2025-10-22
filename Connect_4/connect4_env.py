@@ -20,20 +20,21 @@ def drop_token(board, col, token):#drops token
             return row
     raise ValueError("Column is full")
 
-def count_aligned(board, row, col, token, d_row, d_col):
+def count_aligned(board, row, col, token, direction):
     total = 0
-    r, c = row + d_row, col + d_col
+    step_row, step_col = direction
+    r, c = row + step_row, col + step_col
     while 0 <= r < ROWS and 0 <= c < COLUMNS and board[r][c] == token:
         total += 1
-        r += d_row
-        c += d_col
+        r += step_row
+        c += step_col
     return total
 
 def has_winner(board, row, col, token):
     directions = ((1, 0), (0, 1), (1, 1), (1, -1))
-    for d_row, d_col in directions:
-        span = 1 + count_aligned(board, row, col, token, d_row, d_col)
-        span += count_aligned(board, row, col, token, -d_row, -d_col)
+    for direction in directions:
+        span = 1 + count_aligned(board, row, col, token, direction)
+        span += count_aligned(board, row, col, token, (-direction[0], -direction[1]))
         if span >= 4:
             return True
     return False
