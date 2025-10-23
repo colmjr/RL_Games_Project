@@ -1,4 +1,4 @@
-from  minesweeper_env import MinesweeperEnv
+from  Minesweeper.minesweeper_env import MinesweeperEnv
 
 def make_env():
     return MinesweeperEnv(10,20,6)
