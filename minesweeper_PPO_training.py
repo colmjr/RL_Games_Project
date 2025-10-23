@@ -1,16 +1,12 @@
 from  minesweeper_env import MinesweeperEnv
 
 def make_env():
-    """Creates the single-agent Gomoku environment with a random opponent."""
     return MinesweeperEnv(10,20,6)
 
 
 if __name__ == "__main__":
-    """Train a PPO agent in the Gomoku environment and save the model."""
-
     from stable_baselines3 import PPO
     from stable_baselines3.common.vec_env import DummyVecEnv
-
     vec_env = DummyVecEnv([make_env])
     model = PPO(
         "MlpPolicy",

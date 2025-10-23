@@ -13,16 +13,16 @@ class MinesweeperEnv(gym.Env):
         self.state = np.full((self.gridheight, self.gridwidth), -1, dtype=np.int16)
         self.mines = set()
 
-    def reset(self):
+    def reset(self,seed=None, options=None):
         #Reset the environment to the initial state.
         self.state = np.full((self.gridheight, self.gridwidth), -1, dtype=np.int16)
         self.mines = set()
         self.revealed = set()
-        reward=0
+        self.done = False
         #Randomly place mines
         num_mines = (self.gridwidth * self.gridheight) // self.mine_multiple
         while len(self.mines) < num_mines:
-            mine = (np.random.randint(0, self.gridwidth), np.random.randint(0, self.gridheight))
+            mine = (self.np_random.integers(0, self.gridwidth),self.np_random.integers(0, self.gridheight))
             self.mines.add(mine)
         return self.state, {}
     def mine_count_check(self,x,y):
@@ -33,8 +33,8 @@ class MinesweeperEnv(gym.Env):
                     count+=1
         return count
     def step(self, action):
-        self.x=action["x"]
-        self.y=action["y"]
+        self.x=int(action[0])
+        self.y=int(action[1])
         terminated=False
         reward=0
         if self.revealed.__contains__((self.x,self.y)):
