@@ -7,7 +7,7 @@ class MinesweeperEnv(gym.Env):
         self.gridwidth=gridwidth
         self.gridheight=gridheight
         self.mine_multiple=mine_multiple
-        self.action_space = gym.spaces.Dict({"x": gym.spaces.Discrete(self.gridwidth),"y": gym.spaces.Discrete(self.gridheight),})
+        self.action_space = gym.spaces.MultiDiscrete([self.gridwidth, self.gridheight])
         self.observation_space = gym.spaces.Box(low=-1, high=8, shape=(self.gridheight, self.gridwidth), dtype=np.int16)
         #0 is not revealed, 0-8 is possible with the adjacent mines
         self.state = np.full((self.gridheight, self.gridwidth), -1, dtype=np.int16)
@@ -55,7 +55,6 @@ class MinesweeperEnv(gym.Env):
         return self.state, reward, self.done, False, {}
 
     def render(self, mode='human'):
-        """Render the current state of the environment."""
         display_grid = np.full((self.gridheight, self.gridwidth), '.', dtype=str)
         for (r, c) in self.revealed:
             display_grid[r, c] = str(self.state[r,c])  # Show revealed count
