@@ -3,11 +3,11 @@ import gymnasium as gym
 class MinesweeperEnv(gym.Env):
     #Custom Minesweeper Environment for Reinforcement Learning.
 
-    def __init__(self,gridheight,gridwidth,mine_multiple):#mine multiple is the fraction of total cells that are mines
+    def __init__(self,gridheight,gridwidth,mine_multiple):#mine multiple is the fraction of total cells that are mines, ex minemultiple=6
         self.gridwidth=gridwidth
         self.gridheight=gridheight
         self.mine_multiple=mine_multiple
-        self.action_space = gym.spaces.Discrete(self.gridwidth * self.gridheight)
+        self.action_space = gym.spaces.Dict({"x": gym.spaces.Discrete(self.gridwidth),"y": gym.spaces.Discrete(self.gridheight),})
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(self.gridheight, self.gridwidth), dtype=np.int16)
         self.state = np.zeros((self.gridheight, self.gridwidth), dtype=np.int16)
         self.mines = set()
@@ -18,6 +18,8 @@ class MinesweeperEnv(gym.Env):
         self.mines = set()
         self.revealed = set()
         self.done = False
+        terminated=False
+        reward=0
         #Randomly place mines
         num_mines = (self.gridwidth * self.gridheight) // self.mine_multiple
         while len(self.mines) < num_mines:
@@ -26,8 +28,8 @@ class MinesweeperEnv(gym.Env):
         return self.state, {}
 
     def step(self, action):
-        self.x=action["x"]//self.gridwidth
-        self.y=action["y"]//self.gridheight
+        self.x=action["x"]
+        self.y=action["y"]
         if (self.x, self.y) in self.mines:
             terminated=True
             reward = -1  # Hit a mine
@@ -37,6 +39,7 @@ class MinesweeperEnv(gym.Env):
         if len(self.revealed) == (self.gridwidth * self.gridheight) - len(self.mines):
             terminated=True
             reward = 1  # All safe cells revealed
+        self.done=terminated
         return self.state, reward, self.done, False, {}
 
     def render(self, mode='human'):
