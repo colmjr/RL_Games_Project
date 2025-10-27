@@ -1,18 +1,16 @@
-"""Gradio interface for playing BOBO using the provided environment wrappers."""
-
 from typing import Dict, Tuple
-
+import os
 import gradio as gr
 from stable_baselines3 import PPO
 
 from BOBO_env import MOVES
 from BOBO_wrapper import SingleAgentEnv
 
-
 MODEL_PATH = "BOBO_PPO_results"
 MAX_STEPS = 50
 HISTORY_LEN = 20
-
+os.environ.setdefault('NO_PROXY', '127.0.0.1,localhost')
+os.environ.setdefault('no_proxy', '127.0.0.1,localhost')
 
 def _format_move(move_id: int) -> str:
     """Return a human-readable label for a move id."""
@@ -39,7 +37,7 @@ class HumanOpponent:
 
 
 class ModelSession:
-    def __init__(self, model_path: str = MODEL_PATH):
+    def __init__(self, model_path: str = (MODEL_PATH)):
         self.model = PPO.load(model_path)
         self.human_policy = HumanOpponent()
         self.env = SingleAgentEnv(MAX_STEPS, HISTORY_LEN, self.human_policy)
@@ -141,4 +139,4 @@ def build_demo() -> gr.Blocks:
 
 if __name__ == "__main__":
     demo = build_demo()
-    demo.launch()
+    demo.launch(share=True)
