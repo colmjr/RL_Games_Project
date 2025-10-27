@@ -25,6 +25,7 @@ if __name__ == "__main__":
         ent_coef=0.01,
         gamma=0.99,
     )
-    model.learn(100_000)
+    model.learn(100_000,progress_bar=True)
     model.save("BOBO_PPO_results")
     print("Training complete. Model saved as 'BOBO_PPO_results.zip'.")
+    model = PPO.load("BOBO_PPO_results")

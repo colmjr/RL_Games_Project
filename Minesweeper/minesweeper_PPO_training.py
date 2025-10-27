@@ -18,6 +18,6 @@ if __name__ == "__main__":
         ent_coef=0.01,
         gamma=0.99,
     )
-    model.learn(100_000)
+    model.learn(100_000,progress_bar=True)
     model.save("Minesweeper_PPO_results")
     print("Training complete. Model saved as 'Minesweeper_PPO_results.zip'.")
