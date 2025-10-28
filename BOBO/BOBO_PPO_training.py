@@ -21,11 +21,11 @@ if __name__ == "__main__":
         verbose=1,
         n_steps=2048,
         batch_size=64,
-        learning_rate=3e-3,
+        learning_rate=1e-3,
         ent_coef=0.01,
         gamma=0.99,
     )
-    model.learn(100_000,progress_bar=True)
+    model.learn(1e7,progress_bar=True)
     model.save("BOBO_PPO_results")
     print("Training complete. Model saved as 'BOBO_PPO_results.zip'.")
     model = PPO.load("BOBO_PPO_results")
