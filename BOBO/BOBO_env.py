@@ -36,7 +36,7 @@ WIN_RULES = {
     (6, 7): "player2",
     # deflect
     (5, 8): "player1", (6, 8): "player1", (7, 8): "player1",
-    (8, 5): "player1", (8, 6): "player1", (8, 7): "player1",
+    (8, 5): "player2", (8, 6): "player2", (8, 7): "player2",
 }
 
 
