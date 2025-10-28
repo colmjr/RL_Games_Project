@@ -66,7 +66,7 @@ class CustomEnvironment(ParallelEnv):
         elif player_points >= move["cost"]:
             return action, player_points - move["cost"]
         else:
-            return 1, player_points
+            return -1, player_points
 
     def reset(self, seed=None, options=None):
         """Resets the environment to the initial state."""
@@ -101,6 +101,18 @@ class CustomEnvironment(ParallelEnv):
             rewards = {"player1": -1, "player2": 1}
             terminations = {a: True for a in self.agents}
             print(f"P2Win")
+            self.point1 = 0
+            self.point2 = 0
+        elif self.move1 == -1:
+            rewards = {"player1": -1, "player2": 1}
+            terminations = {a: True for a in self.agents}
+            print(f"P1Invalid")
+            self.point1 = 0
+            self.point2 = 0
+        elif self.move2 == -1:
+            rewards = {"player1": 0.05, "player2": -0.05}
+            terminations = {a: True for a in self.agents}
+            print(f"P2Invalid")
             self.point1 = 0
             self.point2 = 0
         else:

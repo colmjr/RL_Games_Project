@@ -21,7 +21,7 @@ if __name__ == "__main__":
         verbose=1,
         n_steps=2048,
         batch_size=64,
-        learning_rate=3e-4,
+        learning_rate=3e-3,
         ent_coef=0.01,
         gamma=0.99,
     )

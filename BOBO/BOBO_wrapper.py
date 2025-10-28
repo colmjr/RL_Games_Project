@@ -1,29 +1,28 @@
 import numpy as np
 import gymnasium as gym
 from collections import deque
-from BOBO_env import CustomEnvironment
+from BOBO_env import CustomEnvironment, MOVES
 
 
 class RandomOpponent:
-    """Returns a random legal action (0-8)."""
 
-    def __call__(self, obs=None):
-        """Ignores observation and returns random action."""
-        # numpy.randint high is exclusive; use 9 to include action 8
-        return int(np.random.randint(0, 9))
+    def __call__(self, obs=None, points=None):
+        #Does random move according to points available, previously often outputted invalid actions
+        if points is None:
+            if obs is not None and len(obs) > 1:
+                # Observation stores normalized opponent points at index 1.
+                points = int(round(float(np.clip(obs[1], 0.0, 1.0)) * 20))
+            else:
+                points = 0
+        legal_moves = [
+            move_idx for move_idx, move in MOVES.items()
+            if move["cost"] == -1 or points >= move["cost"]
+        ]
+        return int(np.random.choice(legal_moves))
 
 
 class SingleAgentEnv(gym.Env):
-    """
-    Single-agent wrapper around Parallel CustomEnvironment.
-    Agent is player1; opponent provided by opponent_policy.
-    """
-
     def __init__(self, maxsteps, history_len, opponent_policy):
-        """
-        Transforms the two-player CustomEnvironment into a single-agent environment.
-        Observation includes own points, opponent points, and opponent's last history_len moves.
-        """
         super().__init__()
         self.env = CustomEnvironment(maxsteps)
         self.opponent = opponent_policy
@@ -63,7 +62,11 @@ class SingleAgentEnv(gym.Env):
 
     def step(self, action):
         """Takes a step in the environment using the agent's action and opponent's action."""
-        opp_action = int(self.opponent(self._last_obs)) # Get opponent action
+        opp_points = getattr(self.env, "point2", 0)
+        try:
+            opp_action = int(self.opponent(self._last_obs, points=opp_points)) # Get opponent action
+        except TypeError:
+            opp_action = int(self.opponent(self._last_obs))
         actions = {"player1": int(action), "player2": opp_action} # Combine actions
         observations, rewards, terminations, truncations, infos = self.env.step(actions) # Get steps in env
         r = float(rewards.get("player1", 0)) # Reward for player1
