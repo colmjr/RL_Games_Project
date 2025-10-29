@@ -2,7 +2,6 @@
 from copy import copy
 from gymnasium.spaces import Discrete, MultiDiscrete
 from pettingzoo import ParallelEnv
-
 MOVES = {
     0: {"name": "save", "cost": -1, "type": "gain"},
     1: {"name": "defend", "cost": 0, "type": "defense"},
@@ -54,7 +53,8 @@ class CustomEnvironment(ParallelEnv):
         self.point2 = None
         self.timestep = None
         self.maxsteps = maxsteps
-        self.no_attack_rounds = 0
+        self.attack_rounds = 0
+        self.attack_rewards=0.4
         self.possible_agents = ["player1", "player2"]
         self.action_spaces = {a: Discrete(len(MOVES)) for a in self.possible_agents}
         self.observation_spaces = {a: MultiDiscrete([len(MOVES), 20, 20]) for a in self.possible_agents}
@@ -77,7 +77,7 @@ class CustomEnvironment(ParallelEnv):
         self.point1 = 0
         self.move2 = 1
         self.point2 = 0
-        self.no_attack_rounds = 0
+        self.attack_rounds = 0
         observations = {
             a: (self.move1, self.point1, self.point2)
             for a in self.agents
@@ -95,6 +95,7 @@ class CustomEnvironment(ParallelEnv):
         # Track consecutive rounds without an attack from either player.
         if self.move1 in MOVES and (MOVES[self.move1]["type"] == "sword" or MOVES[self.move1]["type"] == "double_sword" or MOVES[self.move1]["type"] == "storm" or MOVES[self.move1]["type"]=="bomb"):
             self.no_attack_rounds += 1
+        self.timestep += 1
         winner = WIN_RULES.get((self.move1, self.move2))
         if winner == "player1":
             rewards = {"player1": 1, "player2": -1}
@@ -111,25 +112,24 @@ class CustomEnvironment(ParallelEnv):
             self.point2 = 0
             self.no_attack_rounds = 0
         elif self.move1 == -1:
-            rewards = {"player1": -1, "player2": 1}
+            rewards = {"player1": -0.5, "player2": 0.5}
             terminations = {a: True for a in self.agents}
             print(f"P1Invalid")
             self.point1 = 0
             self.point2 = 0
             self.no_attack_rounds = 0
         elif self.move2 == -1:
-            rewards = {"player1": 0.05, "player2": -0.05}
+            rewards = {"player1": 0.5, "player2": -0.5}
             terminations = {a: True for a in self.agents}
             print(f"P2Invalid")
             self.point1 = 0
             self.point2 = 0
             self.no_attack_rounds = 0
         elif self.attack_rounds >= 1:
-            rewards["player1"]+=self.attack_rounds*0.08 #reward for attacking for player 1(PPO)
+            rewards["player1"]+=self.attack_rounds*(1/self.timestep)*self.attack_rewards #reward for attacking for player 1(PPO), also incentivising attacking earlier
             self.no_attack_rounds = 0 
         else:
             truncations = {a: False for a in self.agents}
-        self.timestep += 1
         if self.timestep > self.maxsteps:
             truncations = {"player1": True, "player2": True}
         observations = {a: (self.move1, self.move2, self.point1, self.point2) for a in self.agents}
