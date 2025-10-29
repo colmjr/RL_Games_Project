@@ -93,7 +93,7 @@ class CustomEnvironment(ParallelEnv):
         terminations = {a: False for a in self.agents}
         truncations = {a: False for a in self.agents}
         # Track consecutive rounds without an attack from either player.
-        if (self.move1 in MOVES and (MOVES[self.move1]["type"] == "sword" or MOVES[self.move1]["type"] == "double_sword" or MOVES[self.move1]["type"] == "storm" or MOVES[self.move1]["type"=="bomb"])) :
+        if self.move1 in MOVES and (MOVES[self.move1]["type"] == "sword" or MOVES[self.move1]["type"] == "double_sword" or MOVES[self.move1]["type"] == "storm" or MOVES[self.move1]["type"]=="bomb"):
             self.no_attack_rounds = 0
         else:
             self.no_attack_rounds += 1
