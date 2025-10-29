@@ -22,7 +22,7 @@ if __name__ == "__main__":
         n_steps=2048,
         batch_size=64,
         learning_rate=1e-3,
-        ent_coef=0.01,
+        ent_coef=0.02,
         gamma=0.99,
     )
     model.learn(1e6,progress_bar=True)

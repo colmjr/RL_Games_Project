@@ -94,8 +94,6 @@ class CustomEnvironment(ParallelEnv):
         truncations = {a: False for a in self.agents}
         # Track consecutive rounds without an attack from either player.
         if self.move1 in MOVES and (MOVES[self.move1]["type"] == "sword" or MOVES[self.move1]["type"] == "double_sword" or MOVES[self.move1]["type"] == "storm" or MOVES[self.move1]["type"]=="bomb"):
-            self.no_attack_rounds = 0
-        else:
             self.no_attack_rounds += 1
         winner = WIN_RULES.get((self.move1, self.move2))
         if winner == "player1":
@@ -126,13 +124,9 @@ class CustomEnvironment(ParallelEnv):
             self.point1 = 0
             self.point2 = 0
             self.no_attack_rounds = 0
-        elif self.no_attack_rounds >= 10:
-            rewards = {"player1": -0.5, "player2": 0}
-            terminations = {a: True for a in self.agents}
-            print("NoAttackTimeout")
-            self.point1 = 0
-            self.point2 = 0
-            self.no_attack_rounds = 0
+        elif self.attack_rounds >= 1:
+            rewards["player1"]+=self.attack_rounds*0.08 #reward for attacking for player 1(PPO)
+            self.no_attack_rounds = 0 
         else:
             truncations = {a: False for a in self.agents}
         self.timestep += 1
