@@ -8,7 +8,7 @@ def make_env():
     return SingleAgentEnv(50, 20, RandomOpponent())
 
 
-if __name__ == "__main__":
+if __name__ =='' "__main__":
     """Train a PPO agent in the BOBO environment and save the model."""
 
     from stable_baselines3 import PPO
