@@ -55,8 +55,8 @@ class CustomEnvironment(ParallelEnv):
         self.maxsteps = maxsteps
         self.attack_rounds = 0
         self.no_attack_rounds = 0
-        self.attack_rewards = 0.7
-        self.no_attack_rewards = -0.5
+        self.attack_rewards = 0.4
+        self.no_attack_rewards = -0.3
         self.possible_agents = ["player1", "player2"]
         self.action_spaces = {a: Discrete(len(MOVES)) for a in self.possible_agents}
         self.observation_spaces = {a: MultiDiscrete([len(MOVES), 20, 20]) for a in self.possible_agents}
@@ -119,7 +119,7 @@ class CustomEnvironment(ParallelEnv):
             self.attack_rounds = 0
             self.no_attack_rounds = 0
         elif self.move1 == -1:
-            rewards = {"player1": -0.5, "player2": 0.5}
+            rewards = {"player1": -0.5, "player2": 0}
             terminations = {a: True for a in self.agents}
             print(f"P1Invalid")
             self.point1 = 0
@@ -127,7 +127,7 @@ class CustomEnvironment(ParallelEnv):
             self.attack_rounds = 0
             self.no_attack_rounds = 0
         elif self.move2 == -1:
-            rewards = {"player1": 0.5, "player2": -0.5}
+            rewards = {"player1": 0, "player2": -0.5}
             terminations = {a: True for a in self.agents}
             print(f"P2Invalid")
             self.point1 = 0
