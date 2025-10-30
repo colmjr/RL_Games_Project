@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
 import os
 import gradio as gr
-from stable_baselines3 import TRPO
+from sb3_contrib import TRPO
 
 from BOBO_env import MOVES
 from BOBO_wrapper import SingleAgentEnv
@@ -64,7 +64,7 @@ def _format_status(session: ModelSession) -> str:
     max_steps = getattr(env, "maxsteps", MAX_STEPS)
     return (
         f"**Step**: {env.timestep} / {max_steps}  \n"
-        f"**PPO points**: {env.point1}  \n"
+        f"**TRPO points**: {env.point1}  \n"
         f"**Your points**: {env.point2}"
     )
 
@@ -108,10 +108,10 @@ def reset_game(session: ModelSession) -> Tuple[str, str, ModelSession]:
 
 def build_demo() -> gr.Blocks:
     initial_session = ModelSession()
-    with gr.Blocks(title="Play BOBO vs PPO Agent") as demo:
-        gr.Markdown("# BOBO vs PPO Agent")
+    with gr.Blocks(title="Play BOBO vs TRPO Agent") as demo:
+        gr.Markdown("# BOBO vs TRPO Agent")
         gr.Markdown(
-            "Select a move each turn. The PPO agent controls player 1. "
+            "Select a move each turn. The TRPO agent controls player 1. "
             "The first player to trigger a winning rule ends the round."
         )
 
