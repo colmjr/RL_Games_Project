@@ -1,27 +1,12 @@
-"""
-Parallel Gomoku environment exposing full-grid observations for each agent.
-
-The environment follows the PettingZoo ParallelEnv API so it can interoperate
-with wrappers such as ``PettingZooToSB3Wrapper`` for single-agent training.
-Each observation is the entire board encoded as integers:
-    0 -> empty cell
-    1 -> player_o stone
-    2 -> player_x stone
-"""
-
 from __future__ import annotations
-
 from typing import Dict, Mapping, Optional, Tuple
-
 import numpy as np
 from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
-# Grid configuration. Gomoku always requires five stones in a row.
 GRID_HEIGHT = 15
 GRID_WIDTH = 15
 WIN_LENGTH = 5
-
 
 class CustomEnvironment(ParallelEnv):
     metadata = {"name": "gomoku_parallel_v0"}
@@ -53,25 +38,16 @@ class CustomEnvironment(ParallelEnv):
             )
             for agent in self.possible_agents
         }
-
         self._rng = np.random.default_rng()
         self.grid = np.zeros((self.grid_height, self.grid_width), dtype=np.int8)
         self.timestep = 0
         self._last_moves: Dict[str, Optional[Tuple[int, int]]] = {
             agent: None for agent in self.possible_agents
         }
-
-    # ------------------------------------------------------------------ #
-    # PettingZoo ParallelEnv API
-    # ------------------------------------------------------------------ #
-    def reset(
-        self, *, seed: Optional[int] = None, options: Optional[Mapping[str, object]] = None
-    ):
+    def reset(self, *, seed, options: Optional[Mapping[str, object]] = None): #options mapping just in case we want to add more later
         del options
-
         if seed is not None:
             self._rng = np.random.default_rng(seed)
-
         self.agents = list(self.possible_agents)
         self.grid.fill(0)
         self.timestep = 0
@@ -136,12 +112,14 @@ class CustomEnvironment(ParallelEnv):
             if winner is not None:
                 rewards[winner] = 1.0
                 rewards[self._other_agent(winner)] = -1.0
+                print(f"'{winner}' wins!")
                 terminations = {agent: True for agent in self.possible_agents}
                 self.agents = []
             elif self.timestep >= self.maxsteps or board_full:
                 truncations = {agent: True for agent in self.possible_agents}
                 self.agents = []
         else:
+            print(f"Agent '{invalid_agent}' made an invalid move.")
             losing_agent = invalid_agent
             rewards[losing_agent] = -1.0
             rewards[self._other_agent(losing_agent)] = 1.0
@@ -156,35 +134,24 @@ class CustomEnvironment(ParallelEnv):
 
         observations = {agent: self._grid_observation() for agent in self.possible_agents}
         return observations, rewards, terminations, truncations, infos
-
     def render(self):
         grid_str = "\n".join(" ".join(str(cell) for cell in row) for row in self.grid)
         print(grid_str)
-
     def close(self):
         pass
-
     def observation_space(self, agent: str):
         return self.observation_spaces[agent]
-
     def action_space(self, agent: str):
         return self.action_spaces[agent]
+    
 
-    # ------------------------------------------------------------------ #
-    # Helpers
-    # ------------------------------------------------------------------ #
     def _grid_observation(self) -> np.ndarray:
         return self.grid.copy()
-
     def _is_within_bounds(self, x: int, y: int) -> bool:
-        return 0 <= x < self.grid_height and 0 <= y < self.grid_width
-
+        return 0 <= x < self.grid_height and 0 <= y < self.grid_width and self.grid[x, y] == 0
     def _is_winning_move(self, x: int, y: int, symbol: int) -> bool:
-        # Check horizontal, vertical, and the two diagonals. With WIN_LENGTH fixed,
-        # we only need to look up to four cells in each direction.
-        for dx, dy in ((1, 0), (0, 1), (1, 1), (1, -1)):
+        for dx, dy in ((1, 0), (0, 1), (1, 1), (1, -1)):#each direction: horizontal, vertical, diagonal
             total = 1
-
             for step in range(1, WIN_LENGTH):
                 nx = x + dx * step
                 ny = y + dy * step
