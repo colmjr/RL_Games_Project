@@ -26,6 +26,7 @@ class SingleAgentEnv(gym.Env):
         super().__init__()
         self.env = CustomEnvironment(maxsteps)
         self.opponent = opponent_policy
+        self.maxsteps = maxsteps
         self.history_len = history_len
         obs_dim = 2 + history_len
         # low=0.0, high=1.0 for normalization, shape=(obs_dim,) for saving observation dimensions

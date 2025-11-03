@@ -33,7 +33,7 @@ def evaluate(episodes, model_path):
             obs, reward, terminated, truncated, info = env.step(act) # Take a step in the environment
             done = bool(terminated or truncated) # Update done flag
             last_reward = reward # Update last reward
-        if last_reward == 1:
+        if last_reward >= 1:
             wins += 1
     print(f"Win rate: {wins}/{episodes} = {wins / episodes:.2f}")
 
