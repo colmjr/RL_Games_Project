@@ -3,45 +3,39 @@ from typing import Dict, Mapping, Optional, Tuple
 import numpy as np
 from gymnasium import spaces
 from pettingzoo import ParallelEnv
-
-GRID_HEIGHT = 15
-GRID_WIDTH = 15
-WIN_LENGTH = 5
-
+GRID_HEIGHT = 3
 class CustomEnvironment(ParallelEnv):
-    metadata = {"name": "gomoku_parallel_v0"}
+    metadata = {"name": "tictactoe_parallel_v0"}
+
     def __init__(self, maxsteps: int) -> None:
         if maxsteps <= 0:
             raise ValueError("maxsteps must be a positive integer")
 
         self.maxsteps = maxsteps
-        self.grid_height = GRID_HEIGHT
-        self.grid_width = GRID_WIDTH
+        self.grid_width = GRID_HEIGHT
         self.possible_agents = ["player_o", "player_x"]
         self.agents = list(self.possible_agents)
-
-        # Map agents to numeric symbols stored on the grid.
         self._symbols: Dict[str, int] = {"player_o": 1, "player_x": 2}
         self.action_spaces = {
-            agent: spaces.MultiDiscrete([self.grid_height, self.grid_width])
+            agent: spaces.MultiDiscrete([self.grid_width, self.grid_width])
             for agent in self.possible_agents
         }
         self.observation_spaces = {
             agent: spaces.Box(
                 low=0,
                 high=len(self._symbols),
-                shape=(self.grid_height, self.grid_width),
+                shape=(self.grid_width, self.grid_width),
                 dtype=np.int8,
             )
             for agent in self.possible_agents
         }
         self._rng = np.random.default_rng()
-        self.grid = np.zeros((self.grid_height, self.grid_width), dtype=np.int8)
+        self.grid = np.zeros((self.grid_width, self.grid_width), dtype=np.int8)
         self.timestep = 0
         self._last_moves: Dict[str, Optional[Tuple[int, int]]] = {
             agent: None for agent in self.possible_agents
         }
-    def reset(self, *, seed, options: Optional[Mapping[str, object]] = None): #options mapping just in case we want to add more later
+    def reset(self, *, seed, options: Optional[Mapping[str, object]] = None):
         del options
         if seed is not None:
             self._rng = np.random.default_rng(seed)
@@ -60,12 +54,9 @@ class CustomEnvironment(ParallelEnv):
 
         moves: Dict[str, Tuple[int, int]] = {}
         invalid_agent: Optional[str] = None
-
-        # Validate and parse actions.
         for agent in self.possible_agents:
             if agent not in actions:
                 raise KeyError(f"Missing action for agent '{agent}'")
-
             action = actions[agent]
             x, y = int(action[0]), int(action[1])
             if not self._is_within_bounds(x, y):
@@ -73,11 +64,9 @@ class CustomEnvironment(ParallelEnv):
                 break
             moves[agent] = (x, y)
 
-        # Prevent both agents from selecting the same cell simultaneously.
         if invalid_agent is None and moves["player_o"] == moves["player_x"]:
             invalid_agent = "player_x"
 
-        # Check for collisions with existing stones.
         if invalid_agent is None:
             for agent, (x, y) in moves.items():
                 if self.grid[x, y] != 0:
@@ -140,30 +129,29 @@ class CustomEnvironment(ParallelEnv):
         return self.observation_spaces[agent]
     def action_space(self, agent: str):
         return self.action_spaces[agent]
-    
 
     def _grid_observation(self) -> np.ndarray:
         return self.grid.copy()
     def _is_within_bounds(self, x: int, y: int) -> bool:
-        return 0 <= x < self.grid_height and 0 <= y < self.grid_width and self.grid[x, y] == 0
+        return 0 <= x < self.grid_width and 0 <= y < self.grid_width and self.grid[x, y] == 0
     def _is_winning_move(self, x: int, y: int, symbol: int) -> bool:
-        for dx, dy in ((1, 0), (0, 1), (1, 1), (1, -1)):#each direction: horizontal, vertical, diagonal
+        for dx, dy in ((1, 0), (0, 1), (1, 1), (1, -1)):
             total = 1
-            for step in range(1, WIN_LENGTH):
+            for step in range(1, 3):
                 nx = x + dx * step
                 ny = y + dy * step
                 if not self._is_within_bounds(nx, ny) or self.grid[nx, ny] != symbol:
                     break
                 total += 1
 
-            for step in range(1, WIN_LENGTH):
+            for step in range(1, 3):
                 nx = x - dx * step
                 ny = y - dy * step
                 if not self._is_within_bounds(nx, ny) or self.grid[nx, ny] != symbol:
                     break
                 total += 1
 
-            if total >= WIN_LENGTH:
+            if total >= 3:
                 return True
 
         return False
