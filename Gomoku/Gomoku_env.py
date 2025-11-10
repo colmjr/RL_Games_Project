@@ -73,11 +73,9 @@ class CustomEnvironment(ParallelEnv):
                 break
             moves[agent] = (x, y)
 
-        # Prevent both agents from selecting the same cell simultaneously.
         if invalid_agent is None and moves["player_o"] == moves["player_x"]:
             invalid_agent = "player_x"
-
-        # Check for collisions with existing stones.
+            
         if invalid_agent is None:
             for agent, (x, y) in moves.items():
                 if self.grid[x, y] != 0:
