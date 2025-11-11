@@ -1,14 +1,10 @@
-"""
-This script trains a PPO agent to play as a player in the BOBO environment against a random opponent.
-The results are saved to "BOBO_PPO_results.zip".
-"""
 from BOBO_wrapper import SingleAgentEnv, RandomOpponent
+
 def make_env():
     """Creates the single-agent BOBO environment with a random opponent."""
     return SingleAgentEnv(50, 20, RandomOpponent())
 
-
-if __name__ =='' "__main__":
+if __name__ == "__main__":
     """Train a PPO agent in the BOBO environment and save the model."""
 
     from stable_baselines3 import PPO
@@ -25,7 +21,7 @@ if __name__ =='' "__main__":
         ent_coef=0.02,
         gamma=0.99,
     )
-    model.learn(1e6,progress_bar=True)
+    model.learn(1e6, progress_bar=True)
     model.save("BOBO_PPO_results")
     print("Training complete. Model saved as 'BOBO_PPO_results.zip'.")
     model = PPO.load("BOBO_PPO_results")

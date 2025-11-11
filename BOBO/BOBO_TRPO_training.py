@@ -1,8 +1,8 @@
 from BOBO_wrapper import SingleAgentEnv, RandomOpponent
+
 def make_env():
     """Creates the single-agent BOBO environment with a random opponent."""
     return SingleAgentEnv(50, 20, RandomOpponent())
-
 
 if __name__ == "__main__":
     """Train a PPO agent in the BOBO environment and save the model."""
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         batch_size=64,
         learning_rate=1e-3
     )
-    model.learn(1e6,progress_bar=True)
+    model.learn(1e6, progress_bar=True)
     model.save("BOBO_TRPO_results")
     print("Training complete. Model saved as 'BOBO_TRPO_results.zip'.")
     model = TRPO.load("BOBO_TRPO_results")

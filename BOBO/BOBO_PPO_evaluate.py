@@ -1,8 +1,6 @@
-"""Evaluate a trained PPO model on the BOBO environment and print the win rate."""
 import numpy as np
 from stable_baselines3 import PPO
 from BOBO_PPO_training import make_env
-
 
 def int_action_from_pred(action):
     """Convert the model's action prediction to an integer action."""
@@ -10,12 +8,11 @@ def int_action_from_pred(action):
         try:
             return int(action.item())  # Try to convert using item()
         except Exception:
-            return int(action.flatten()[0]) # Flatten and take the first element
+            return int(action.flatten()[0])  # Flatten and take the first element
     elif isinstance(action, (list, tuple)):  # Check if action is a list or tuple
         return int(action[0])
     else:
         return int(action)
-
 
 def evaluate(episodes, model_path):
     """Evaluate the trained PPO model and print the win rate."""
@@ -27,16 +24,15 @@ def evaluate(episodes, model_path):
         obs, info = env.reset()
         done = False
         last_reward = 0.0
-        while not done: # Loop until the episode is done
-            action, _ = model.predict(obs, deterministic=True) # Get action from the model
-            act = int_action_from_pred(action) # Convert action to integer
-            obs, reward, terminated, truncated, info = env.step(act) # Take a step in the environment
-            done = bool(terminated or truncated) # Update done flag
-            last_reward = reward # Update last reward
+        while not done:  # Loop until the episode is done
+            action, _ = model.predict(obs, deterministic=True)  # Get action from the model
+            act = int_action_from_pred(action)  # Convert action to integer
+            obs, reward, terminated, truncated, info = env.step(act)  # Take a step in the environment
+            done = bool(terminated or truncated)  # Update done flag
+            last_reward = reward  # Update last reward
         if last_reward >= 1:
             wins += 1
     print(f"Win rate: {wins}/{episodes} = {wins / episodes:.2f}")
-
 
 if __name__ == "__main__":
     """Run the evaluation of the trained PPO model."""

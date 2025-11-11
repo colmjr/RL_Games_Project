@@ -18,10 +18,8 @@ def _format_move(move_id: int) -> str:
     pretty = move["name"].replace("_", " ").title()
     return f"{pretty} ({move_id})"
 
-
 MOVE_LABELS = [_format_move(mid) for mid in MOVES]
 LABEL_TO_MOVE = {_format_move(mid): mid for mid in MOVES}
-
 
 class HumanOpponent:
     """Callable policy that returns the human player's pending action."""
@@ -34,7 +32,6 @@ class HumanOpponent:
 
     def __call__(self, obs=None) -> int:
         return int(self.next_action)
-
 
 class ModelSession:
     def __init__(self, model_path: str = (MODEL_PATH)):
@@ -57,9 +54,8 @@ class ModelSession:
         self.done = bool(terminated or truncated)
         return int(agent_action), float(reward), self.done, info
 
-
 def _format_status(session: ModelSession) -> str:
-    #Create a markdown status block summarising game state.
+    # Create a markdown status block summarising game state.
     env = session.env.env  # Underlying CustomEnvironment instance
     max_steps = getattr(env, "maxsteps", MAX_STEPS)
     return (
@@ -68,13 +64,12 @@ def _format_status(session: ModelSession) -> str:
         f"**Your points**: {env.point2}"
     )
 
-
 def _format_summary(agent_move: int, human_move: int, agent_reward: float, info: Dict, done: bool) -> str:
     """Compose markdown summary for the latest turn."""
     lines = [
         f"TRPO played **{_format_move(agent_move)}**.",
         f"You played **{_format_move(human_move)}**.",
-        f"Rewards → TRPO: {agent_reward:+}, You: {-agent_reward:+}.",
+        f"Rewards -> TRPO: {agent_reward:+}, You: {-agent_reward:+}.",
     ]
     winner = info.get("winner")
     if winner:
@@ -83,7 +78,6 @@ def _format_summary(agent_move: int, human_move: int, agent_reward: float, info:
     if done:
         lines.append("_Game finished. Select a move to auto-start a new match._")
     return "\n".join(lines)
-
 
 def play_turn(choice: str, session: ModelSession) -> Tuple[str, str, ModelSession]:
     if session is None:
@@ -96,7 +90,6 @@ def play_turn(choice: str, session: ModelSession) -> Tuple[str, str, ModelSessio
     status = _format_status(session)
     return summary, status, session
 
-
 def reset_game(session: ModelSession) -> Tuple[str, str, ModelSession]:
     """Reset handler for the reset button."""
     if session is None:
@@ -104,7 +97,6 @@ def reset_game(session: ModelSession) -> Tuple[str, str, ModelSession]:
     else:
         session.reset()
     return "New game started. Choose your move.", _format_status(session), session
-
 
 def build_demo() -> gr.Blocks:
     initial_session = ModelSession()
@@ -134,7 +126,6 @@ def build_demo() -> gr.Blocks:
             outputs=[summary, status, session_state],
         )
     return demo
-
 
 if __name__ == "__main__":
     demo = build_demo()

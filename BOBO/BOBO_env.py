@@ -1,4 +1,3 @@
-"""Custom two-player environment for the game of BOBO using PettingZoo."""
 from copy import copy
 from gymnasium.spaces import Discrete, MultiDiscrete
 from pettingzoo import ParallelEnv
@@ -12,7 +11,7 @@ MOVES = {
     6: {"name": "storm", "cost": 3, "type": "attack"},
     7: {"name": "bomb", "cost": 5, "type": "attack"},
     8: {"name": "deflect", "cost": 1, "type": "defense"}
-} 
+}
 
 WIN_RULES = {
     # save
