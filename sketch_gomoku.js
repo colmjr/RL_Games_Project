@@ -20,7 +20,8 @@ function setup() {
 function draw() {
   if (mouseIsPressed){
     let [x,y]= human_encoder(mouseX,mouseY);
-    drop(x,y,1);
+    drop(x,y,2); 
+    //human is always first because PPO is deterministic and so humans introduce more variability in the beginnings of games
   }
 }
 function drop(x,y,symbol){//gomoku symbol mapping:1=white,2=black
