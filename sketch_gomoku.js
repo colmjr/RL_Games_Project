@@ -3,7 +3,6 @@ const CELL = 30;
 const API = "http://localhost:8000";
 let board = Array(SIZE * SIZE).fill(0);
 let gameOver = false;
-
 async function fetchState() {
   const res = await fetch(`${API}/state`);
   const data = await res.json();
@@ -24,9 +23,20 @@ async function sendMove(row, col) {
   gameOver = data.done;
   redrawBoard();
 }
-
+function setup(){
+  createCanvas(GRIDWIDTH, GRIDHEIGHT);
+  rectMode(CENTER);
+  colorMode(RGB,255);
+  background(215, 185, 96);
+}
 function redrawBoard() {
-  background(215,185,96);
+  fill(0);
+  for (let i = 0; i<=GRIDWIDTH; i+=30){
+    line(i,0,i,GRIDHEIGHT);
+  }
+  for (let j = 0; j<=GRIDHEIGHT; j+=30){
+    line(0,j,GRIDWIDTH,j);
+  }
   // draw grid…
   for (let idx = 0; idx < board.length; idx++) {
     const val = board[idx];           // 0 empty, 0.5 agent O, 1 human X
