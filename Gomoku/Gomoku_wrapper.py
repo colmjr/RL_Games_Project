@@ -2,7 +2,6 @@ import numpy as np
 import gymnasium as gym
 from Gomoku_env import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
 
-
 class RandomOpponent:
     """Returns a random legal action."""
 

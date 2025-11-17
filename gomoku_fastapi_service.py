@@ -11,10 +11,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from stable_baselines3 import PPO
 
-from Gomoku_env import GRID_HEIGHT, GRID_WIDTH
-from Gomoku_wrapper import SingleAgentEnv
+from Gomoku.Gomoku_env import GRID_HEIGHT, GRID_WIDTH
+from Gomoku.Gomoku_wrapper import SingleAgentEnv
 
-MODEL_PATH = "Gomoku_PPO_results"
+MODEL_PATH = "Gomoku/Gomoku_PPO_results"
 MAX_STEPS = GRID_HEIGHT * GRID_WIDTH
 
 

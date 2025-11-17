@@ -41,7 +41,7 @@ function draw() {
   redrawBoard();
 }
 
-function redrawBoard() {
+function draw() {
   background(215, 185, 96);
   fill(0);
   for (let i = 0; i <= WIDTH; i += CELL) {
@@ -57,6 +57,10 @@ function redrawBoard() {
     const y = Math.floor(idx / SIZE);
     drop(x, y, Math.round(val * 2));
   }
+}
+function drop(x, y, symbol) {//symbol is 1 for black, 2 white
+    fill((2-symbol)*255);
+    circle(x,y,25)
 }
 
 function mousePressed() {
