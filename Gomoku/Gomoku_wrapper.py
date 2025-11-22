@@ -3,25 +3,45 @@ import gymnasium as gym
 from Gomoku_env import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
 
 
-class RandomOpponent:
-    """Returns a random legal action."""
+class HeuristicOpponent:
+    """Returns a heuristic action: Win > Block > Extend > Random."""
 
     def __call__(self, obs=None, env: CustomEnvironment = None):
-        """Ignores observation and returns random legal action using env to avoid full columns."""
-        try:
-            # If env is available, return a tuple (x,y) for a random empty cell in env.grid.
-            grid = env.grid  # type: ignore[attr-defined]
-            empties = np.argwhere(grid == 0)
-            if len(empties) == 0:
-                return 0, 0
-            idx = np.random.randint(0, len(empties))
-            x, y = int(empties[idx, 0]), int(empties[idx, 1])
-            return x, y
-        except Exception:
-            # Fallback to uniform sampling if env not provided or any error occurs
-            x = int(np.random.randint(0, GRID_HEIGHT))
-            y = int(np.random.randint(0, GRID_WIDTH))
-            return x, y
+        if env is None:
+            # Fallback to random if env is not provided
+            return int(np.random.randint(0, GRID_HEIGHT)), int(np.random.randint(0, GRID_WIDTH))
+
+        grid = env.grid
+        empties = np.argwhere(grid == 0)
+        if len(empties) == 0:
+            return 0, 0
+
+        my_symbol = env._symbols["player_x"]
+        opp_symbol = env._symbols["player_o"]
+
+        # 1. Check for winning moves
+        for x, y in empties:
+            if env._is_winning_move(x, y, my_symbol):
+                return x, y
+
+        # 2. Check for blocking opponent's winning moves
+        for x, y in empties:
+            if env._is_winning_move(x, y, opp_symbol):
+                return x, y
+
+        # 3. Check for creating 4-in-a-row (Extend)
+        for x, y in empties:
+            if env._get_max_line_length(x, y, my_symbol) >= 4:
+                return x, y
+
+        # 4. Check for blocking opponent's 4-in-a-row
+        for x, y in empties:
+            if env._get_max_line_length(x, y, opp_symbol) >= 4:
+                return x, y
+
+        # 5. Random valid move
+        idx = np.random.randint(0, len(empties))
+        return int(empties[idx, 0]), int(empties[idx, 1])
 
 
 class SingleAgentEnv(gym.Env):

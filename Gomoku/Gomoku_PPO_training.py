@@ -3,12 +3,12 @@ This script trains a PPO agent to play as a player in the Gomoku environment aga
 The results are saved to "Gomoku_PPO_results.zip".
 """
 from Gomoku_env import GRID_HEIGHT, GRID_WIDTH
-from Gomoku_wrapper import SingleAgentEnv, RandomOpponent
+from Gomoku_wrapper import SingleAgentEnv, HeuristicOpponent
 
 
 def make_env():
-    """Creates the single-agent Gomoku environment with a random opponent."""
-    return SingleAgentEnv(GRID_HEIGHT * GRID_WIDTH, RandomOpponent())
+    """Creates the single-agent Gomoku environment with a heuristic opponent."""
+    return SingleAgentEnv(GRID_HEIGHT * GRID_WIDTH, HeuristicOpponent())
 
 
 if __name__ == "__main__":
@@ -24,8 +24,8 @@ if __name__ == "__main__":
         verbose=1,
         n_steps=2048,
         batch_size=64,
-        learning_rate=3e-4,
-        ent_coef=0.01,
+        learning_rate=3e-3,
+        ent_coef=0.02,
         gamma=0.99,
     )
     model.learn(100_000,progress_bar=True)
