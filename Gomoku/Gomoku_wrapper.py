@@ -5,6 +5,8 @@ from Gomoku_env import CustomEnvironment, GRID_HEIGHT, GRID_WIDTH
 
 class HeuristicOpponent:
     """Returns a heuristic action: Win > Block > Extend > Random."""
+    def __init__(self, randomness: float = 0.0):
+        self.randomness = randomness
 
     def __call__(self, obs=None, env: CustomEnvironment = None):
         if env is None:
@@ -15,6 +17,11 @@ class HeuristicOpponent:
         empties = np.argwhere(grid == 0)
         if len(empties) == 0:
             return 0, 0
+
+        # Chance to play randomly (mistake)
+        if np.random.random() < self.randomness:
+            idx = np.random.randint(0, len(empties))
+            return int(empties[idx, 0]), int(empties[idx, 1])
 
         my_symbol = env._symbols["player_x"]
         opp_symbol = env._symbols["player_o"]

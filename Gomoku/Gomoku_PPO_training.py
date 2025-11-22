@@ -8,7 +8,7 @@ from Gomoku_wrapper import SingleAgentEnv, HeuristicOpponent
 
 def make_env():
     """Creates the single-agent Gomoku environment with a heuristic opponent."""
-    return SingleAgentEnv(GRID_HEIGHT * GRID_WIDTH, HeuristicOpponent())
+    return SingleAgentEnv(GRID_HEIGHT * GRID_WIDTH, HeuristicOpponent(randomness=0.3))
 
 
 if __name__ == "__main__":
@@ -28,6 +28,6 @@ if __name__ == "__main__":
         ent_coef=0.02,
         gamma=0.99,
     )
-    model.learn(100_000,progress_bar=True)
+    model.learn(1_000_000,progress_bar=True)
     model.save("Gomoku_PPO_results")
     print("Training complete. Model saved as 'Gomoku_PPO_results.zip'.")

@@ -4,8 +4,8 @@ import numpy as np
 from gymnasium import spaces
 from pettingzoo import ParallelEnv
 
-GRID_HEIGHT = 15
-GRID_WIDTH = 15
+GRID_HEIGHT = 12
+GRID_WIDTH = 12
 WIN_LENGTH = 5
 
 class CustomEnvironment(ParallelEnv):
@@ -114,8 +114,28 @@ class CustomEnvironment(ParallelEnv):
                 line_length = self._get_max_line_length(x, y, symbol)
                 if line_length == 4:
                     rewards[agent] += 2.0
+                    print(f"Reward: +2.0 for Line of 4 by {agent}")
                 elif line_length == 3:
                     rewards[agent] += 0.5
+                    print(f"Reward: +0.5 for Line of 3 by {agent}")
+
+                # Intermediate rewards for blocking opponent
+                opp_symbol = self._symbols[self._other_agent(agent)]
+                # Check if this move blocked a winning move for the opponent
+                # We temporarily set the cell to opponent's symbol and check line length
+                self.grid[x, y] = opp_symbol
+                opp_line_length = self._get_max_line_length(x, y, opp_symbol)
+                self.grid[x, y] = symbol # Restore correct symbol
+
+                if opp_line_length >= 5:
+                    rewards[agent] += 5.0 # Critical block
+                    print(f"Reward: +5.0 for Critical Block by {agent}")
+                elif opp_line_length == 4:
+                    rewards[agent] += 1.0 # Major block
+                    print(f"Reward: +1.0 for Major Block by {agent}")
+                elif opp_line_length == 3:
+                    rewards[agent] += 0.5 # Minor block
+                    print(f"Reward: +0.5 for Minor Block by {agent}")
 
             for agent, (x, y) in moves.items():
                 symbol = self._symbols[agent]
